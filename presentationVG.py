@@ -1,20 +1,22 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-import matplotlib.pyplot as plt
-import seaborn as sns
+import streamlit as st # type: ignore
+import pandas as pd # type: ignore
+import numpy as np # type: ignore
+from streamlit_option_menu import option_menu # type: ignore
+import plotly.express as px # type: ignore
+import plotly.graph_objects as go # type: ignore
+import matplotlib.pyplot as plt # type: ignore
+import seaborn as sns # type: ignore
 from collections import Counter
+import matplotlib.cm as cm # type: ignore
 
-import nltk
+import nltk # type: ignore
 nltk.download('stopwords')
 nltk.download('wordnet')
-from nltk.corpus import stopwords
+from nltk.corpus import stopwords # type: ignore
 
-from PIL import Image
-from wordcloud import WordCloud
-from wordcloud import ImageColorGenerator
+from PIL import Image # type: ignore
+from wordcloud import WordCloud # type: ignore
+from wordcloud import ImageColorGenerator # type: ignore
 
 # charger bases des données
 vgsales = pd.read_csv('vgsales.csv')
@@ -334,8 +336,8 @@ notes_series = notes_series.groupby(['Titre', 'Année']).agg({
 
 # Fusionner les données de ventes et de notes
 df_combined = pd.merge(df_cleaned, notes_series, left_on='Name', right_on='Titre', how='inner')
-
-
+notes_series['Series'] = notes_series['Titre'].apply(classify_series)
+notes_series['Game'] = notes_series['Titre'] + ' (' + notes_series['Année'].astype(str) + ')'
 
 
 
@@ -941,7 +943,51 @@ def display_visualisation():
         - **Éditeur Principal** : Take-Two Interactive a publié les titres les plus vendus de la série Duke Nukem, bien que les ventes globales soient restées modestes par rapport aux autres franchises.
         """)
 
-    # Sélection de la série et du type d'analyse
+    st.subheader("Comparaison des Jeux selon les Indicateurs de Popularité")
+    franchise_selected = st.selectbox("Choisissez une série", ['Final Fantasy', 'Tomb Raider', 'Duke Nukem'], key="franchise")
+
+    filtered_data = notes_series[notes_series['Series'] == franchise_selected]
+    top_games = filtered_data.nlargest(5, 'Etoiles')
+    games = top_games['Game']
+    coup_de_coeur = top_games['Coup_de_coeur']
+    envie_de_jouer = top_games['Envie_de_jouer']
+    etoiles = top_games['Etoiles']
+    notes = top_games['Note']
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    fig.patch.set_facecolor('#0E1117')  # Background color of the entire figure
+    ax.set_facecolor('#0E1117')  # Background color of the axes
+
+    width = 0.25
+    x = range(len(games))
+    coup_de_coeur_color = '#FF8021'
+    envie_de_jouer_color = '#A7EA52'
+    etoiles_color = '#5DCEAF'
+
+    bar1 = ax.barh([p - width for p in x], coup_de_coeur, width, label='Coup de Coeur', color=coup_de_coeur_color)
+    bar2 = ax.barh(x, envie_de_jouer, width, label='Envie de Jouer', color=envie_de_jouer_color)
+    bar3 = ax.barh([p + width for p in x], etoiles, width, label='Étoiles', color=etoiles_color)
+
+    ax.set_yticks(x)
+    ax.set_yticklabels(games, color='white')
+    ax.set_xlabel('Valeur', color='white')
+    ax.tick_params(axis='x', colors='white')
+    ax.set_ylabel('Jeux', color='white')
+    ax.set_title(f"Indicateurs des jeux - {franchise_selected}", color='white')
+    ax.legend(loc='upper left', bbox_to_anchor=(-0.7, 1.1), facecolor='black', framealpha=0, labelcolor='white')
+
+    # Adjust axes line color
+    for spine in ax.spines.values():
+        spine.set_edgecolor('white')
+
+    # Add text to bars
+    for i, rect in enumerate(bar3):
+        ax.text(rect.get_width() + 0.1, rect.get_y() + rect.get_height() / 2, 
+                f'Note: {notes.iloc[i]}', va='center', color='white')
+
+    st.pyplot(fig)
+
+    
     st.subheader("Classement : Top et Flop par Série de Jeux")
     series_list = df_combined['Series'].unique()
     selected_series = st.selectbox("Choisissez une série", series_list, key="series_select")
@@ -1045,6 +1091,13 @@ def display_visualisation():
             st.write("""Le jeu Duke Nukem Trilogy: Critical Mass (2011) a été un échec commercial, avec des ventes très faibles. Le jeu a été mal accueilli en raison de son gameplay daté et de sa faible qualité de production, ce qui a largement contribué à son échec. Les jouers n'ont même pas noté le jeu.  
             Le faible nombre de jeux et l'insuffisance de données disponibles concernant la série Duke Nukem rendent difficile une analyse approfondie des facteurs influençant les ventes.""")
 
+    
+    
+    
+    
+    
+    
+    
     st.subheader('Analyse des facteurs influençant les ventes des jeux')
     selected_series2 = st.selectbox("Choisissez une série", ['Final Fantasy', 'Tomb Raider'], key="series_select2")
     type_note_param1 = st.selectbox("Choisissez entre les paramètres suivants pour X-axis", ['Note', 'Etoiles', 'Envie de jouer'], key="note_select1")
