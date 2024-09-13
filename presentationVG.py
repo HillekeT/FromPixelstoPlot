@@ -28,6 +28,7 @@ notes_DN = pd.read_csv('game_notes_dataDN.csv')
 
 # Remplacer les éditeurs 'Square', 'Square Enix', 'Square EA', et 'Square Soft' par 'SquareGroup'
 selection_vg['Publisher'] = selection_vg['Publisher'].replace(['Square', 'Square Enix', 'Square EA', 'SquareSoft'], 'SquareGroup')
+vgsales['Publisher'] = vgsales['Publisher'].replace(['Square', 'Square Enix', 'Square EA', 'SquareSoft'], 'SquareGroup')
 
 # Nettoyer les données et regrouper par série
 df_cleaned = selection_vg.groupby('Name').agg({
@@ -58,11 +59,10 @@ def classify_series(name):
 
 df_cleaned['Series'] = df_cleaned['Name'].apply(classify_series)
 
-# Couleurs pour chaque série
 series_colors = {
-    'Final Fantasy': 'blue',
-    'Tomb Raider': 'green',
-    'Duke Nukem': 'red'
+    'Final Fantasy': '#0173B2',
+    'Tomb Raider': "#029E73",
+    'Duke Nukem': "#D55E00"
 }
 
 # Fonction pour tracer les ventes globales avec deux axes y (ventes globales et nombre de jeux)
@@ -89,7 +89,7 @@ def plot_sales_and_games(series_name, color):
         x=sales_by_year['Year'],
         y=sales_by_year['Name'],
         mode='lines+markers',
-        line=dict(color='orange'),
+        line=dict(color='#CC78BC'),
         marker=dict(size=8),
         name='Nombre de Jeux',
         yaxis='y2'
@@ -106,15 +106,15 @@ def plot_sales_and_games(series_name, color):
         ),
         yaxis2=dict(
             title='Nombre de Jeux',
-            titlefont=dict(color='orange'),
-            tickfont=dict(color='orange'),
+            titlefont=dict(color='#CC78BC'),
+            tickfont=dict(color='#CC78BC'),
             overlaying='y',
             side='right'
         ),
         legend=dict(
             x=0.8, y=1.2,  # Ajuste la position de la légende
-            bgcolor="White",
-            bordercolor="Black",
+            bgcolor="#0E1117",
+            bordercolor="#0E1117",
             borderwidth=1
         ),
         template='plotly_white'
@@ -160,7 +160,7 @@ def plot_sales_by_region(series_name, color):
     series_data = df_cleaned[df_cleaned['Series'] == series_name]
     regions = ['NA_Sales', 'EU_Sales', 'JP_Sales', 'Other_Sales']
     region_labels = ['North America', 'Europe', 'Japan', 'Other']
-    region_colors = ['blue', 'green', 'red', 'orange']
+    region_colors = ['#56B4E9', '#DE8F05', '#CC78BC', '#ECE133']
     
     fig = go.Figure()
 
@@ -184,7 +184,7 @@ def plot_sales_by_region(series_name, color):
         width=1000,
         autosize=True,
         margin=dict(l=0, r=0, t=30, b=0),
-        plot_bgcolor='white'
+        plot_bgcolor='#0E1117'
     )
     return fig
 
@@ -339,11 +339,6 @@ df_combined = pd.merge(df_cleaned, notes_series, left_on='Name', right_on='Titre
 notes_series['Series'] = notes_series['Titre'].apply(classify_series)
 notes_series['Game'] = notes_series['Titre'] + ' (' + notes_series['Année'].astype(str) + ')'
 
-
-
-
-
-
 df_cloud = pd.read_csv('Avis_series_SA2.csv')
 
 df_DN_hist = df_cloud.loc[df_cloud.jeu_serie == 'DN']
@@ -351,9 +346,9 @@ df_FF_hist = df_cloud.loc[df_cloud.jeu_serie.isin(['FF', 'FF6', 'FF7'])]
 df_TR_hist = df_cloud.loc[df_cloud.jeu_serie.isin(['TR', 'TR2'])]
 
 color_map = {
-        'POSITIF': 'green',
-        'NEGATIF': 'red',
-        'NEUTRAL': 'orange'
+        'POSITIF': '#029E73',
+        'NEGATIF': '#D55E00',
+        'NEUTRAL': '#ECE133'
     }
 
 def create_histogram(df, title):
@@ -625,12 +620,20 @@ def display_visualisation():
     colE, colF = st.columns(2)
     with colE :
         # Graphique nombre de jeux par série
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(10, 6), facecolor='#0E1117')
+        ax = plt.gca()  # Get current axes
+        ax.set_facecolor('#0E1117')  # Set axes background to black
         sns.countplot(data=df_cleaned, x='Series', order=df_cleaned['Series'].value_counts().index, palette=series_colors)
         plt.xticks(rotation=45)
-        plt.title('Nombre de jeux par série')
-        plt.xlabel('Série')
-        plt.ylabel('Nombre de jeux')
+        plt.title('Nombre de jeux par série', color='white')
+        plt.xlabel('Série', color='white')
+        plt.ylabel('Nombre de jeux', color='white')
+        ax.xaxis.set_tick_params(color='white')
+        ax.yaxis.set_tick_params(color='white')
+        for spine in ax.spines.values():
+            spine.set_edgecolor('white')
+        for label in ax.get_xticklabels() + ax.get_yticklabels():
+            label.set_color('white')
         st.pyplot(plt)
 
     with colF:
@@ -755,7 +758,7 @@ def display_visualisation():
             x=df_pivot.index,
             y=df_pivot[series],
             name=series,
-            marker=dict(color={'Final Fantasy': 'blue', 'Tomb Raider': 'green', 'Duke Nukem': 'red'}[series])
+            marker=dict(color={'Final Fantasy': '#0173B2', 'Tomb Raider': '#029E73', 'Duke Nukem': '#D55E00'}[series])
         ))
 
     # Mise en page du graphique
@@ -835,6 +838,53 @@ def display_visualisation():
         with st.container():
             st.plotly_chart(fig_platform)
 
+        st.write("""
+        ##### Analyse Comparative des Ventes Globales par Plateforme : 
+        Ce graphique présente une comparaison des ventes globales des trois franchises : **Final Fantasy**, **Tomb Raider**, et **Duke Nukem**, réparties par différentes plateformes. L'analyse met en évidence les performances relatives de ces séries en termes de ventes sur les principales consoles de jeu, tout en soulignant l'influence des plateformes sur le succès commercial de chaque franchise.
+        """)
+        # Create the Plotly figure
+        fig = px.bar(
+            df_cleaned, 
+            x='Platform', 
+            y='Global_Sales', 
+            color='Series', 
+            barmode='group',
+            category_orders={'Platform': df_cleaned['Platform'].unique()},
+            color_discrete_map={
+                'Final Fantasy': '#0173B2',
+                'Tomb Raider': '#029E73',
+                'Duke Nukem': '#D55E00'
+            },
+            labels={'Global_Sales': 'Ventes globales (en millions)', 'Platform': 'Plateforme'},
+            title="Ventes moyennes globales par série et par plateforme"
+        )
+        # Update layout
+        fig.update_layout(
+            height=600,
+            width=1200,
+            title_x=0.5,
+            legend_title_text='Séries',
+            xaxis_title="Plateforme",
+            yaxis_title="Ventes moyennes globales (en millions)"
+        )
+        st.plotly_chart(fig)
+
+        st.write("""
+        ##### Final Fantasy (Bleu)
+        - **Performance Globale** : Final Fantasy domine clairement en termes de ventes globales sur plusieurs plateformes. Les consoles de Sony, notamment la PlayStation (PS), la PlayStation 2 (PS2), et la PlayStation 3 (PS3), ont été des piliers pour la série. Ces plateformes ont permis à la franchise de toucher un large public, consolidant sa position comme l'une des séries de jeux de rôle les plus vendues au monde.
+        - **Influence des Plateformes** : La capacité de Final Fantasy à être présente sur presque toutes les plateformes majeures, y compris celles de Nintendo et Microsoft, a largement contribué à la longévité de la franchise. Cette stratégie d'accessibilité a permis à la série de rester pertinente à travers plusieurs générations de consoles et de capturer un public mondial varié.
+
+        ##### Tomb Raider (Vert)
+        - **Performance Globale** : Tomb Raider affiche une solide performance sur plusieurs plateformes, avec des ventes globales notables sur la PlayStation (PS), la PlayStation 3 (PS3), et la Xbox 360.
+        - **Influence des Plateformes** : La polyvalence de Tomb Raider, qui a réussi à performer à la fois sur les plateformes Sony et Microsoft, montre que la série a su capter un public diversifié et s'adapter aux évolutions du marché.
+
+        ##### Duke Nukem (Rouge)
+        - **Performance Globale** : Duke Nukem montre des ventes globales plus modestes comparées aux autres franchises, ses meilleures performances étant sur des plateformes comme la Nintendo 64 (N64) et la Xbox 360.
+        - **Influence des Plateformes** : Le succès limité de Duke Nukem sur une sélection restreinte de plateformes indique une difficulté à maintenir l'engagement des joueurs sur les nouvelles générations de consoles.
+
+        Le graphique met en lumière l'importance des plateformes dans le succès commercial des franchises de jeux vidéo.
+        """)
+
     # 2. Analyse des ventes par éditeur
     elif selected_analysis == 'Éditeurs':
         sales_by_publisher = df_series.groupby('Publisher')['Global_Sales'].sum().reset_index()
@@ -855,6 +905,47 @@ def display_visualisation():
         )
         with st.container():
             st.plotly_chart(fig_publisher)
+
+        # Filter the top 25 publishers
+        top_publishers = vgsales['Publisher'].value_counts().head(15).reset_index()
+        top_publishers.columns = ['Publisher', 'Global_Sales']
+
+        # Create a funnel chart (you can plot it as a bar graph with annotations)
+        fig = px.funnel(top_publishers, x='Global_Sales', y='Publisher', title='Top 15 Publishers')
+        annotations = [
+            {'x': top_publishers['Global_Sales'].max()*-0.1, 'y': 'SquareGroup', 'text': '1st for Final Fantasy (SquareGroup)','color': 'blue', 'arrow': True},
+            {'x': top_publishers['Global_Sales'].max()*0.1, 'y': 'Sony Computer Entertainment', 'text': '2nd for Final Fantasy (Sony Computer Entertainement)','color': 'blue', 'arrow': True},
+            {'x': top_publishers['Global_Sales'].max()*0.1, 'y': 'SquareGroup', 'text': '2nd for Tomb Raider (SquareGroup)','color': 'green', 'arrow': True},
+            {'x': top_publishers['Global_Sales'].max()*0.01, 'y': 'Take-Two Interactive', 'text': '1st for Duke Nukem (Take Two Interactive)','color': 'red', 'arrow': True},
+        ]
+
+        for annotation in annotations:
+            fig.add_annotation(
+                x=annotation['x'],
+                y=annotation['y'],
+                text=annotation['text'],
+                showarrow=annotation['arrow'],
+                arrowhead=2,
+                ax=70,
+                ay=-55,
+                font=dict(color=annotation['color'], size=12, family="Arial, Bold"),
+            )
+        st.plotly_chart(fig)
+
+        st.write("""
+        #### Analyse des Ventes Globales par Éditeur pour les Séries
+
+        Les éditeurs jouent un rôle déterminant dans le succès commercial des jeux vidéo, gérant à la fois la production et le marketing des jeux. Cette section examine les éditeurs qui ont eu le plus grand impact sur les ventes globales des franchises Final Fantasy, Tomb Raider, et Duke Nukem.
+
+        ##### Final Fantasy (Blue)
+        - **Éditeur Dominant** : SquareGroup (Square, Square Enix, Square EA, et SquareSoft) est l'éditeur principal de la série, responsable de plus de 80 millions de ventes globales. Sony Computer Entertainment a aussi joué un rôle crucial dans le succès des titres majeurs Final Fantasy VII et X.
+
+        ##### Tomb Raider (Vert)
+        - **Éditeurs Dominants** : Eidos Interactive a marqué les premiers succès de Tomb Raider avec plus de 30 millions de ventes globales, tandis que SquareGroup a relancé la série avec le reboot de 2013.
+
+        ##### Duke Nukem (Rouge)
+        - **Éditeur Principal** : Take-Two Interactive a publié les titres les plus vendus de la série Duke Nukem, bien que les ventes globales soient restées modestes par rapport aux autres franchises.
+        """)
 
     # 3. Analyse des ventes par genre
     elif selected_analysis == 'Genre':
@@ -877,72 +968,7 @@ def display_visualisation():
         with st.container():
             st.plotly_chart(fig_genre)
 
-    if selected_analysis == "platforme":
-        st.write("""
-        ##### Analyse Comparative des Ventes Globales par Plateforme : 
-        Ce graphique présente une comparaison des ventes globales des trois franchises : **Final Fantasy**, **Tomb Raider**, et **Duke Nukem**, réparties par différentes plateformes. L'analyse met en évidence les performances relatives de ces séries en termes de ventes sur les principales consoles de jeu, tout en soulignant l'influence des plateformes sur le succès commercial de chaque franchise.
-        """)
-
-        # Create the Plotly figure
-        fig = px.bar(
-            df_cleaned, 
-            x='Platform', 
-            y='Global_Sales', 
-            color='Series', 
-            barmode='group',
-            category_orders={'Platform': df_cleaned['Platform'].unique()},
-            color_discrete_map={
-                'Final Fantasy': 'blue',
-                'Tomb Raider': 'green',
-                'Duke Nukem': 'red'
-            },
-            labels={'Global_Sales': 'Ventes globales (en millions)', 'Platform': 'Plateforme'},
-            title="Ventes moyennes globales par série et par plateforme"
-        )
-
-        # Update layout
-        fig.update_layout(
-            height=600,
-            width=1200,
-            title_x=0.5,
-            legend_title_text='Séries',
-            xaxis_title="Plateforme",
-            yaxis_title="Ventes moyennes globales (en millions)"
-        )
         
-        st.plotly_chart(fig)
-
-        st.write("""
-        ##### Final Fantasy (Bleu)
-        - **Performance Globale** : Final Fantasy domine clairement en termes de ventes globales sur plusieurs plateformes. Les consoles de Sony, notamment la PlayStation (PS), la PlayStation 2 (PS2), et la PlayStation 3 (PS3), ont été des piliers pour la série. Ces plateformes ont permis à la franchise de toucher un large public, consolidant sa position comme l'une des séries de jeux de rôle les plus vendues au monde.
-        - **Influence des Plateformes** : La capacité de Final Fantasy à être présente sur presque toutes les plateformes majeures, y compris celles de Nintendo et Microsoft, a largement contribué à la longévité de la franchise. Cette stratégie d'accessibilité a permis à la série de rester pertinente à travers plusieurs générations de consoles et de capturer un public mondial varié.
-
-        ##### Tomb Raider (Vert)
-        - **Performance Globale** : Tomb Raider affiche une solide performance sur plusieurs plateformes, avec des ventes globales notables sur la PlayStation (PS), la PlayStation 3 (PS3), et la Xbox 360.
-        - **Influence des Plateformes** : La polyvalence de Tomb Raider, qui a réussi à performer à la fois sur les plateformes Sony et Microsoft, montre que la série a su capter un public diversifié et s'adapter aux évolutions du marché.
-
-        ##### Duke Nukem (Rouge)
-        - **Performance Globale** : Duke Nukem montre des ventes globales plus modestes comparées aux autres franchises, ses meilleures performances étant sur des plateformes comme la Nintendo 64 (N64) et la Xbox 360.
-        - **Influence des Plateformes** : Le succès limité de Duke Nukem sur une sélection restreinte de plateformes indique une difficulté à maintenir l'engagement des joueurs sur les nouvelles générations de consoles.
-
-        Le graphique met en lumière l'importance des plateformes dans le succès commercial des franchises de jeux vidéo.
-        """)
-    elif selected_analysis == "Éditeurs":
-        st.write("""
-        #### Analyse des Ventes Globales par Éditeur pour les Séries
-
-        Les éditeurs jouent un rôle déterminant dans le succès commercial des jeux vidéo, gérant à la fois la production et le marketing des jeux. Cette section examine les éditeurs qui ont eu le plus grand impact sur les ventes globales des franchises Final Fantasy, Tomb Raider, et Duke Nukem.
-
-        ##### Final Fantasy (Blue)
-        - **Éditeur Dominant** : SquareGroup (Square, Square Enix, Square EA, et SquareSoft) est l'éditeur principal de la série, responsable de plus de 80 millions de ventes globales. Sony Computer Entertainment a aussi joué un rôle crucial dans le succès des titres majeurs Final Fantasy VII et X.
-
-        ##### Tomb Raider (Vert)
-        - **Éditeurs Dominants** : Eidos Interactive a marqué les premiers succès de Tomb Raider avec plus de 30 millions de ventes globales, tandis que SquareGroup a relancé la série avec le reboot de 2013.
-
-        ##### Duke Nukem (Rouge)
-        - **Éditeur Principal** : Take-Two Interactive a publié les titres les plus vendus de la série Duke Nukem, bien que les ventes globales soient restées modestes par rapport aux autres franchises.
-        """)
-
     st.subheader("Comparaison des Jeux selon les Indicateurs de Popularité")
     franchise_selected = st.selectbox("Choisissez une série", ['Final Fantasy', 'Tomb Raider', 'Duke Nukem'], key="franchise")
 
@@ -960,9 +986,9 @@ def display_visualisation():
 
     width = 0.25
     x = range(len(games))
-    coup_de_coeur_color = '#FF8021'
-    envie_de_jouer_color = '#A7EA52'
-    etoiles_color = '#5DCEAF'
+    coup_de_coeur_color = '#56B4E9'
+    envie_de_jouer_color = '#DE8F05'
+    etoiles_color = '#CC78BC'
 
     bar1 = ax.barh([p - width for p in x], coup_de_coeur, width, label='Coup de Coeur', color=coup_de_coeur_color)
     bar2 = ax.barh(x, envie_de_jouer, width, label='Envie de Jouer', color=envie_de_jouer_color)
@@ -1092,12 +1118,6 @@ def display_visualisation():
             Le faible nombre de jeux et l'insuffisance de données disponibles concernant la série Duke Nukem rendent difficile une analyse approfondie des facteurs influençant les ventes.""")
 
     
-    
-    
-    
-    
-    
-    
     st.subheader('Analyse des facteurs influençant les ventes des jeux')
     selected_series2 = st.selectbox("Choisissez une série", ['Final Fantasy', 'Tomb Raider'], key="series_select2")
     type_note_param1 = st.selectbox("Choisissez entre les paramètres suivants pour X-axis", ['Note', 'Etoiles', 'Envie de jouer'], key="note_select1")
@@ -1116,22 +1136,64 @@ def display_visualisation():
     y_param = column_mapping[type_note_param2]
     filtered_df = df_combined[df_combined['Series'] == selected_series2]
 
-    # Create the scatter plot with selection-based axes
-    fig = px.scatter(filtered_df,
-                    x=x_param,
-                    y=y_param,
-                    color='Global_Sales',
-                    size='Global_Sales',
-                    hover_name='Name',
-                    title=f'Relation entre {x_param} et {y_param}',
-                    labels={x_param: x_param, y_param: y_param},
-                    color_continuous_scale='Viridis')
+    # Create the scatter plot
+    fig = px.scatter(
+        filtered_df,
+        x=x_param,
+        y=y_param,
+        color='Global_Sales',
+        size='Global_Sales',
+        hover_name='Name',
+        title=f'Relation entre {x_param} et {y_param}',
+        labels={x_param: x_param, y_param: y_param},
+        color_continuous_scale='Viridis'
+    )
 
-    fig.update_layout(title_text=f'Relation entre {x_param} et {y_param}',
-                    xaxis_title=x_param,
-                    yaxis_title=y_param)
+    # Update layout for the scatter plot
+    fig.update_layout(
+        title_text=f'Relation entre {x_param} et {y_param}',
+        xaxis_title=x_param,
+        yaxis_title=y_param
+    )
 
     st.plotly_chart(fig)
+
+    # Calculate correlation matrix
+    correlation_matrix = filtered_df[['Global_Sales', 'Note', 'Envie_de_jouer', 'Etoiles', 'Coup_de_coeur']].corr()
+
+    # Create columns for layout
+    colI, colJ, colK = st.columns([1, 2, 1])
+    with colJ:
+        # Create a heatmap with a dark background
+        plt.figure(figsize=(8, 6), facecolor='#0E1117')  # Adjust size as needed
+        ax = plt.gca()  # Get current axes
+        ax.set_facecolor('#0E1117')  # Set axis background to dark gray
+
+        heatmap = sns.heatmap(
+            correlation_matrix,
+            annot=True,
+            cmap='viridis',
+            center=0,
+            vmin=-1,
+            vmax=1,
+            fmt='.2f',
+            linewidths=0.5,
+            cbar_kws={"ticks": [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1]},
+            annot_kws={"size": 8},  # Adjusted annotation size
+            square=True
+        )
+        
+        plt.title(f'Matrice de Corrélation des Paramètres pour {selected_series2}', color='white')
+        plt.xticks(color='white')  # Set x-tick colors to white
+        plt.yticks(color='white')  # Set y-tick colors to white
+        colorbar = heatmap.collections[0].colorbar
+        colorbar.ax.tick_params(labelcolor='white')  # Set color bar tick labels to white
+        
+        # Customize the spines
+        for spine in ax.spines.values():
+            spine.set_edgecolor('white')
+        
+        st.pyplot(plt)
 
     if selected_series == 'Final Fantasy':
         st.write("""
@@ -1142,6 +1204,9 @@ def display_visualisation():
         ##### Tomb Raider:
         En conclusion, bien que les corrélations entre les différentes variables et le succès commercial des jeux Tomb Raider ne soient pas systématiques, certaines tendances se dégagent tout de même. Par exemple, les jeux ayant un grand nombre d’étoiles ou une forte envie de jouer tendent à recevoir un nombre plus important de coups de cœur et à générer des ventes plus élevées, mais cela reste limité et n’est pas applicable à tous les jeux de la série. Il est également important de noter que les ventes globales semblent influencées par des facteurs externes, comme la stratégie de marketing ou la notoriété de la franchise, qui ne sont pas entièrement capturés par les données disponibles. Cela montre que le succès commercial des jeux Tomb Raider dépend d'une combinaison de facteurs à la fois internes (évaluations des joueurs) et externes (promotion et contexte).""")
     
+
+
+
     st.markdown("""<span style="color: #F2AA84; font-weight: bold;">Pour mieux comprendre les raisons des ventes et des évaluations, nous allons analyser les critiques d’une sélection de jeux, en se basant sur les tops et flops. Quels sont les facteurs qui suscitent l'envie de jouer, ou au contraire, provoquent la déception ?</span>""", unsafe_allow_html=True)
     st.markdown("""
     Voici les jeux que nous avons choisis :
